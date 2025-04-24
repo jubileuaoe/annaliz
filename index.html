@@ -9,7 +9,8 @@
       text-align: center;
       margin: 0;
       padding-top: 80px;
-      background-color: #ffe6f0;
+      background: url('https://prnt.sc/wLvduofHTEKK') no-repeat center center fixed;
+      background-size: cover;
       color: #4b0082;
       overflow: hidden;
       height: 100vh;
@@ -18,6 +19,7 @@
     h1 {
       font-size: 2.5em;
       margin-bottom: 10px;
+      text-shadow: 1px 1px 3px white;
     }
 
     h2 {
@@ -25,11 +27,13 @@
       font-size: 1.5em;
       color: #8b008b;
       margin-top: 0;
+      text-shadow: 1px 1px 3px white;
     }
 
     .contador {
       font-size: 2em;
       margin-top: 40px;
+      text-shadow: 1px 1px 2px white;
     }
 
     .borboleta {
@@ -42,6 +46,7 @@
       animation: voar linear infinite;
       opacity: 0.9;
       transition: transform 0.3s ease;
+      pointer-events: none;
     }
 
     @keyframes voar {
@@ -64,7 +69,6 @@
   <h2>Papai e mamãe ansiosos! 🍼💞</h2>
   <div class="contador" id="contador"></div>
 
-  <!-- Script das borboletas -->
   <script>
     const totalBorboletas = 15;
     const borboletas = [];
