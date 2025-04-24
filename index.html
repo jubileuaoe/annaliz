@@ -8,32 +8,44 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 0;
-      padding-top: 80px;
-      background: url('https://prnt.sc/wLvduofHTEKK') no-repeat center center fixed;
-      background-size: cover;
+      padding-top: 30px;
+      background: url('https://i.imgur.com/b1enFoT.jpeg') no-repeat center center fixed;
+      background-size: contain;
       color: #4b0082;
       overflow: hidden;
       height: 100vh;
+      opacity: 0;
+      animation: fadeIn 3s forwards;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    h1, h2 {
+      text-shadow: 0 0 10px #fff, 0 0 20px #ff00ff, 0 0 30px #ff00ff;
     }
 
     h1 {
       font-size: 2.5em;
       margin-bottom: 10px;
-      text-shadow: 1px 1px 3px white;
     }
 
     h2 {
       font-weight: normal;
       font-size: 1.5em;
-      color: #8b008b;
       margin-top: 0;
-      text-shadow: 1px 1px 3px white;
     }
 
     .contador {
       font-size: 2em;
       margin-top: 40px;
-      text-shadow: 1px 1px 2px white;
+      text-shadow: 0 0 15px #fff, 0 0 20px #ff00ff;
     }
 
     .borboleta {
@@ -47,6 +59,8 @@
       opacity: 0.9;
       transition: transform 0.3s ease;
       pointer-events: none;
+      animation-duration: 8s;
+      animation-timing-function: ease-in-out;
     }
 
     @keyframes voar {
@@ -62,12 +76,33 @@
         opacity: 0;
       }
     }
+
+    /* Brilho para as borboletas */
+    .borboleta:hover {
+      animation: brilhoBorboleta 0.5s infinite alternate;
+    }
+
+    @keyframes brilhoBorboleta {
+      0% {
+        opacity: 0.9;
+      }
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 20px 10px rgba(255, 0, 255, 0.7);
+      }
+    }
   </style>
 </head>
 <body>
   <h1>Contagem regressiva para a chegada da Anna Liz 👶💖</h1>
   <h2>Papai e mamãe ansiosos! 🍼💞</h2>
   <div class="contador" id="contador"></div>
+
+  <!-- Música de fundo -->
+  <audio autoplay loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-creativeminds.mp3" type="audio/mp3">
+    Seu navegador não suporta o formato de áudio.
+  </audio>
 
   <script>
     const totalBorboletas = 15;
