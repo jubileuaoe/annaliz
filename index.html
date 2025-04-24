@@ -9,9 +9,10 @@
       text-align: center;
       margin: 0;
       padding-top: 80px;
-      background-color: #ffe6f0; /* rosa bebê */
+      background-color: #ffe6f0;
       color: #4b0082;
       overflow: hidden;
+      height: 100vh;
     }
 
     h1 {
@@ -33,13 +34,14 @@
 
     .borboleta {
       position: absolute;
-      width: 40px;
-      height: 40px;
-      background-image: url('https://i.pinimg.com/736x/23/d0/bc/23d0bc78fc05125d21a8c295d931c8b8.jpg'); /* imagem de borboleta com fundo transparente */
+      width: 50px;
+      height: 50px;
+      background-image: url('https://i.imgur.com/tM3Rz6Z.png');
       background-size: contain;
       background-repeat: no-repeat;
       animation: voar linear infinite;
-      opacity: 0.8;
+      opacity: 0.9;
+      transition: transform 0.3s ease;
     }
 
     @keyframes voar {
@@ -62,18 +64,40 @@
   <h2>Papai e mamãe ansiosos! 🍼💞</h2>
   <div class="contador" id="contador"></div>
 
-  <!-- Borboletas -->
+  <!-- Script das borboletas -->
   <script>
-    const totalBorboletas = 12;
+    const totalBorboletas = 15;
+    const borboletas = [];
 
     for (let i = 0; i < totalBorboletas; i++) {
-      const borboleta = document.createElement("div");
-      borboleta.classList.add("borboleta");
-      borboleta.style.left = Math.random() * 100 + "vw";
-      borboleta.style.animationDuration = (6 + Math.random() * 4) + "s";
-      borboleta.style.animationDelay = Math.random() * 5 + "s";
-      document.body.appendChild(borboleta);
+      const b = document.createElement("div");
+      b.classList.add("borboleta");
+      b.style.left = Math.random() * 100 + "vw";
+      b.style.top = Math.random() * 100 + "vh";
+      b.style.animationDuration = (6 + Math.random() * 4) + "s";
+      b.style.animationDelay = Math.random() * 5 + "s";
+      document.body.appendChild(b);
+      borboletas.push(b);
     }
+
+    document.addEventListener("mousemove", (e) => {
+      borboletas.forEach((b) => {
+        const rect = b.getBoundingClientRect();
+        const dx = e.clientX - (rect.left + rect.width / 2);
+        const dy = e.clientY - (rect.top + rect.height / 2);
+        const distancia = Math.sqrt(dx * dx + dy * dy);
+
+        if (distancia < 80) {
+          const angulo = Math.atan2(dy, dx);
+          const moverX = -Math.cos(angulo) * 80;
+          const moverY = -Math.sin(angulo) * 80;
+          b.style.transform = `translate(${moverX}px, ${moverY}px)`;
+          setTimeout(() => {
+            b.style.transform = "translate(0, 0)";
+          }, 300);
+        }
+      });
+    });
 
     const dataNascimento = new Date("2025-06-16T00:00:00").getTime();
 
