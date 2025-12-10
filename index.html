@@ -1,166 +1,48 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Contador para a chegada da Anna Liz</title>
+  <title>Overlay AOE2 - Adaptado aoe2recs</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding-top: 30px;
-      background: url('https://i.imgur.com/b1enFoT.jpeg') no-repeat center center fixed;
-      background-size: contain;
-      color: #4b0082;
-      overflow: hidden;
-      height: 100vh;
-      opacity: 0;
-      animation: fadeIn 3s forwards;
+      background: #111;
+      color: #fff;
+      font-family: Arial;
     }
-
-    @keyframes fadeIn {
-      0% {
-        opacity: 0;
-      }
-      100% {
-        opacity: 1;
-      }
-    }
-
-    h1, h2 {
-      text-shadow: 0 0 10px #fff, 0 0 20px #ff00ff, 0 0 30px #ff00ff;
-    }
-
-    h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      font-weight: normal;
-      font-size: 1.5em;
-      margin-top: 0;
-    }
-
-    .contador {
-      font-size: 2em;
-      margin-top: 40px;
-      text-shadow: 0 0 15px #fff, 0 0 20px #ff00ff;
-    }
-
-    .borboleta {
-      position: absolute;
-      width: 50px;
-      height: 50px;
-      background-image: url('https://i.pinimg.com/736x/23/d0/bc/23d0bc78fc05125d21a8c295d931c8b8.jpg');
-      background-size: contain;
-      background-repeat: no-repeat;
-      animation: voar linear infinite;
-      opacity: 0.9;
-      transition: transform 0.3s ease;
-      pointer-events: none;
-      animation-duration: 8s;
-      animation-timing-function: ease-in-out;
-    }
-
-    @keyframes voar {
-      0% {
-        transform: translateY(100vh) translateX(0);
-        opacity: 0;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(-100vh) translateX(50vw);
-        opacity: 0;
-      }
-    }
-
-    /* Brilho para as borboletas */
-    .borboleta:hover {
-      animation: brilhoBorboleta 0.5s infinite alternate;
-    }
-
-    @keyframes brilhoBorboleta {
-      0% {
-        opacity: 0.9;
-      }
-      100% {
-        opacity: 1;
-        box-shadow: 0 0 20px 10px rgba(255, 0, 255, 0.7);
-      }
+    #player {
+      padding: 10px;
+      border: 1px solid #555;
+      width: 300px;
     }
   </style>
 </head>
 <body>
-  <h1>Contagem regressiva para a chegada da Anna Liz 👶💖</h1>
-  <h2>Papai e mamãe ansiosos! 🍼💞</h2>
-  <div class="contador" id="contador"></div>
 
-  <!-- Música de fundo -->
-  <audio autoplay loop>
-    <source src="https://voca.ro/13T85L6D4myd" type="audio/mp3">
-    Seu navegador não suporta o formato de áudio.
-  </audio>
+<div id="player">Carregando…</div>
 
-  <script>
-    const totalBorboletas = 15;
-    const borboletas = [];
+<script>
+const PROFILE_ID = 215442; // coloque o ID aqui
 
-    for (let i = 0; i < totalBorboletas; i++) {
-      const b = document.createElement("div");
-      b.classList.add("borboleta");
-      b.style.left = Math.random() * 100 + "vw";
-      b.style.top = Math.random() * 100 + "vh";
-      b.style.animationDuration = (6 + Math.random() * 4) + "s";
-      b.style.animationDelay = Math.random() * 5 + "s";
-      document.body.appendChild(b);
-      borboletas.push(b);
+async function carregarPerfil() {
+    try {
+        const resp = await fetch(`https://aoe2recs.com/api/profile/${PROFILE_ID}`);
+        const data = await resp.json();
+
+        document.getElementById("player").innerHTML = `
+            <h3>${data.profile.name}</h3>
+            <p><b>Elo RM:</b> ${data.profile.rating_rm}</p>
+            <p><b>Elo DM:</b> ${data.profile.rating_dm}</p>
+            <p><b>Partidas:</b> ${data.profile.games}</p>
+        `;
+    } catch (e) {
+        document.getElementById("player").innerText = "Erro ao carregar dados.";
+        console.error(e);
     }
+}
 
-    document.addEventListener("mousemove", (e) => {
-      borboletas.forEach((b) => {
-        const rect = b.getBoundingClientRect();
-        const dx = e.clientX - (rect.left + rect.width / 2);
-        const dy = e.clientY - (rect.top + rect.height / 2);
-        const distancia = Math.sqrt(dx * dx + dy * dy);
+carregarPerfil();
+setInterval(carregarPerfil, 15000); // atualiza a cada 15 segundos
+</script>
 
-        if (distancia < 80) {
-          const angulo = Math.atan2(dy, dx);
-          const moverX = -Math.cos(angulo) * 80;
-          const moverY = -Math.sin(angulo) * 80;
-          b.style.transform = `translate(${moverX}px, ${moverY}px)`;
-          setTimeout(() => {
-            b.style.transform = "translate(0, 0)";
-          }, 300);
-        }
-      });
-    });
-
-    const dataNascimento = new Date("2025-06-17T00:00:00").getTime();
-
-    function atualizarContador() {
-      const agora = new Date().getTime();
-      const diferenca = dataNascimento - agora;
-
-      if (diferenca <= 0) {
-        document.getElementById("contador").innerHTML = "A Anna Liz já chegou! 🎉👶💗";
-        return;
-      }
-
-      const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
-      const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
-      const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
-
-      document.getElementById("contador").innerHTML =
-        `${dias} dias, ${horas} horas, ${minutos} minutos e ${segundos} segundos ⏳`;
-    }
-
-    atualizarContador();
-    setInterval(atualizarContador, 1000);
-  </script>
-  <div class="contador" id="contador"></div>
 </body>
 </html>
