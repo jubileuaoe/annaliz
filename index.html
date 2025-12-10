@@ -1,48 +1,405 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Overlay AOE2 - Adaptado aoe2recs</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Overlay AoE2 — Premium (AoE2Recs)</title>
   <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: Arial;
+    /* Reset simples */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html,body { height: 100%; background: transparent; font-family: "Inter", "Poppins", Arial, sans-serif; -webkit-font-smoothing:antialiased; color: #eaeaea; }
+
+    /* Container */
+    .overlay {
+      width: 980px;
+      max-width: 100%;
+      margin: 12px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 14px;
+      align-items: start;
+      pointer-events: none; /* OBS friendly: change to auto if you need clicks */
     }
-    #player {
-      padding: 10px;
-      border: 1px solid #555;
-      width: 300px;
+
+    /* Glass card style */
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(6px) saturate(1.05);
+      -webkit-backdrop-filter: blur(6px);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+
+    /* Header */
+    .player-header {
+      display:flex;
+      gap:12px;
+      align-items: center;
+    }
+    .civ-icon {
+      width:72px;
+      height:72px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border-radius: 9px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:40px;
+      color:#fff;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .player-title {
+      display:flex;
+      flex-direction: column;
+      gap:4px;
+    }
+    .player-title .name {
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: .3px;
+      color: #fff;
+    }
+    .player-title .sub {
+      font-size: 13px;
+      color: #d8d8d8;
+      opacity: 0.9;
+    }
+
+    /* Elo badges */
+    .badges {
+      display:flex;
+      gap:8px;
+      margin-top:8px;
+      pointer-events: auto;
+    }
+    .badge {
+      background: rgba(0,0,0,0.25);
+      padding:6px 10px;
+      border-radius: 999px;
+      font-size:13px;
+      border: 1px solid rgba(255,255,255,0.03);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    .badge .icon { font-size: 13px; opacity:0.95; }
+
+    /* Left column content */
+    .main-col {
+      display:flex;
+      flex-direction: column;
+      gap:12px;
+    }
+
+    .eco-grid {
+      display:grid;
+      grid-template-columns: repeat(4,1fr);
+      gap:10px;
+    }
+    .eco-item {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      padding:8px;
+      border-radius:8px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.02);
+      min-height:68px;
+      align-items: flex-start;
+    }
+    .eco-item .label { font-size:12px; color:#cfcfcf; }
+    .eco-item .value { font-weight:700; font-size:16px; color:#fff; }
+
+    /* Stats panel (right column) */
+    .right-col {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .stat-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .stat-name { font-size:13px; color:#d6d6d6; }
+    .stat-value { font-weight:700; font-size:16px; }
+
+    /* ticker */
+    .ticker {
+      margin-top:6px;
+      padding:8px 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.2);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.03);
+      pointer-events: auto;
+    }
+    .ticker-list {
+      display:flex;
+      gap:12px;
+      animation: scrollTicker linear infinite;
+      white-space:nowrap;
+      align-items:center;
+    }
+    .ticker-item {
+      display:inline-flex;
+      gap:8px;
+      padding:6px 10px;
+      background: rgba(255,255,255,0.02);
+      border-radius:6px;
+      font-size:13px;
+    }
+    @keyframes scrollTicker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); } /* will duplicate items to loop */
+    }
+
+    /* small helpers */
+    .muted { color:#bdbdbd; font-size:13px; }
+    .win { color: #8fe57f; font-weight:700; }
+    .loss { color: #ff8a8a; font-weight:700; }
+
+    /* Responsive tweak */
+    @media (max-width:880px) {
+      .overlay { grid-template-columns: 1fr; }
+      .right-col { order: 3; }
     }
   </style>
 </head>
 <body>
+  <div class="overlay" id="overlay-root">
+    <div class="main-col card" id="mainCard" style="pointer-events:auto;">
+      <div class="player-header">
+        <div class="civ-icon" id="civIcon">🏹</div>
+        <div class="player-title">
+          <div class="name" id="playerName">Carregando…</div>
+          <div class="sub" id="playerSub">AoE2 — Overlay Premium</div>
+          <div class="badges" id="badges">
+            <!-- badges appended here -->
+          </div>
+        </div>
+      </div>
 
-<div id="player">Carregando…</div>
+      <div class="eco-grid" id="ecoGrid" aria-live="polite" aria-atomic="true">
+        <div class="eco-item"><div class="label">Comida</div><div class="value" id="food">—</div></div>
+        <div class="eco-item"><div class="label">Madeira</div><div class="value" id="wood">—</div></div>
+        <div class="eco-item"><div class="label">Ouro</div><div class="value" id="gold">—</div></div>
+        <div class="eco-item"><div class="label">Pedra</div><div class="value" id="stone">—</div></div>
+      </div>
 
-<script>
-const PROFILE_ID = 215442; // coloque o ID aqui
+      <div class="card" style="margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="muted">Últimas partidas</div>
+          <div class="muted">Atualiza automaticamente</div>
+        </div>
+        <div class="ticker" style="margin-top:8px;">
+          <div class="ticker-list" id="tickerList"></div>
+        </div>
+      </div>
+    </div>
 
-async function carregarPerfil() {
-    try {
-        const resp = await fetch(`https://aoe2recs.com/api/profile/${PROFILE_ID}`);
-        const data = await resp.json();
+    <div class="right-col">
+      <div class="card" id="statsCard" style="pointer-events:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="muted">Estatísticas</div>
+          <div class="muted">Profile ID: <span id="profileIdDisplay">—</span></div>
+        </div>
+        <div class="stat-row"><div class="stat-name">Elo RM</div><div class="stat-value" id="eloRM">—</div></div>
+        <div class="stat-row"><div class="stat-name">Elo DM</div><div class="stat-value" id="eloDM">—</div></div>
+        <div class="stat-row"><div class="stat-name">Partidas</div><div class="stat-value" id="games">—</div></div>
+        <div class="stat-row"><div class="stat-name">Winrate</div><div class="stat-value" id="winrate">—</div></div>
+        <div style="height:10px;"></div>
+        <div class="muted">Mais info</div>
+        <div style="height:8px;"></div>
+        <div class="stat-row"><div class="stat-name">APM média</div><div class="stat-value" id="avgApm">—</div></div>
+        <div class="stat-row"><div class="stat-name">Tempo médio Castle</div><div class="stat-value" id="avgCastle">—</div></div>
+      </div>
 
-        document.getElementById("player").innerHTML = `
-            <h3>${data.profile.name}</h3>
-            <p><b>Elo RM:</b> ${data.profile.rating_rm}</p>
-            <p><b>Elo DM:</b> ${data.profile.rating_dm}</p>
-            <p><b>Partidas:</b> ${data.profile.games}</p>
-        `;
-    } catch (e) {
-        document.getElementById("player").innerText = "Erro ao carregar dados.";
-        console.error(e);
+      <div class="card" id="notes" style="padding:12px;">
+        <div class="muted">Dicas rápidas</div>
+        <ul style="margin-top:8px;color:#ddd;font-size:13px;line-height:1.35;">
+          <li>Double-Bit Axe antes de criar 2ª vila de produtores.</li>
+          <li>Mantenha Horse Collar no build.</li>
+          <li>Confira o ticker para padrões nas últimas partidas.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /***********************************************
+     * Overlay AoE2 (AoE2Recs) — Single-file
+     * PROFILE_ID default: 215442 (troque se quiser)
+     ***********************************************/
+    const PROFILE_ID = 215442; // <-- altere aqui se quiser outro profile
+    const API_BASE = 'https://aoe2recs.com/api';
+    const profileIdDisplay = document.getElementById('profileIdDisplay');
+    const playerNameEl = document.getElementById('playerName');
+    const playerSubEl = document.getElementById('playerSub');
+    const badgesEl = document.getElementById('badges');
+    const civIconEl = document.getElementById('civIcon');
+
+    const eloRM = document.getElementById('eloRM');
+    const eloDM = document.getElementById('eloDM');
+    const gamesEl = document.getElementById('games');
+    const winrateEl = document.getElementById('winrate');
+    const avgApmEl = document.getElementById('avgApm');
+    const avgCastleEl = document.getElementById('avgCastle');
+
+    const foodEl = document.getElementById('food');
+    const woodEl = document.getElementById('wood');
+    const goldEl = document.getElementById('gold');
+    const stoneEl = document.getElementById('stone');
+
+    const tickerList = document.getElementById('tickerList');
+
+    profileIdDisplay.innerText = PROFILE_ID;
+
+    // Safe fetch wrapper with timeout
+    async function safeFetch(url, opts = {}, timeout = 8000) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+        const resp = await fetch(url, { ...opts, signal: controller.signal });
+        clearTimeout(id);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return await resp.json();
+      } catch (e) {
+        clearTimeout(id);
+        console.warn('fetch error', url, e);
+        throw e;
+      }
     }
-}
 
-carregarPerfil();
-setInterval(carregarPerfil, 15000); // atualiza a cada 15 segundos
-</script>
+    // Map civ code -> emoji/icon (simple fallback)
+    const civIcons = {
+      "Mongols": "🐎", "Aztecs":"🪓","Britons":"🏰","Franks":"⚔️","Teutons":"🛡️","Byzantines":"✝️",
+      "Chinese":"🐉","Vikings":"⛵","Persians":"🐫","Huns":"🏇","Koreans":"🏯","Goths":"🔨","Celts":"🌲",
+      "Spanish":"🏵️","Saracens":"🕌","Malay":"🌾","Turks":"🧭","Khmer":"🐘","Incas":"🗿",
+      // fallback icon
+      "default":"🏹"
+    };
 
+    // render profile data
+    async function renderProfile() {
+      try {
+        const url = `${API_BASE}/profile/${PROFILE_ID}`;
+        const data = await safeFetch(url);
+
+        // AoE2recs structure may vary; try several common paths
+        const profile = data.profile || data || {};
+        const name = profile.name || profile.username || profile.personaname || `#${PROFILE_ID}`;
+        const country = profile.country || profile.country_code || '';
+        const civ = (profile.most_played_civ && profile.most_played_civ.name) || profile.civ || profile.favorite_civ || 'default';
+        const rating_rm = profile.rating_rm || profile.rating || profile.elo_rm || (profile.leaderboard && profile.leaderboard.rm_1v1) || '—';
+        const rating_dm = profile.rating_dm || profile.elo_dm || '—';
+        const games = profile.games || profile.total_games || profile.matches || '—';
+        const wins = profile.wins || (profile.w_l && profile.w_l.wins) || profile.total_wins || 0;
+        const losses = profile.losses || (profile.w_l && profile.w_l.losses) || profile.total_losses || 0;
+        const winrate = (wins && games) ? Math.round((wins/games)*100) + '%' : (profile.winrate || '—');
+
+        playerNameEl.innerText = name + (country ? ` • ${country}` : '');
+        playerSubEl.innerText = (profile.title || `Perfil AoE2`) + (profile.tag ? ` • ${profile.tag}` : '');
+        badgesEl.innerHTML = '';
+        const b1 = document.createElement('div'); b1.className='badge'; b1.innerHTML = `<span class="icon">⭐</span> <span>RM ${rating_rm}</span>`; badgesEl.appendChild(b1);
+        const b2 = document.createElement('div'); b2.className='badge'; b2.innerHTML = `<span class="icon">🗡️</span> <span>DM ${rating_dm}</span>`; badgesEl.appendChild(b2);
+
+        eloRM.innerText = rating_rm;
+        eloDM.innerText = rating_dm;
+        gamesEl.innerText = games;
+        winrateEl.innerText = winrate;
+
+        // optional averages
+        avgApmEl.innerText = (profile.avg_apm || profile.apm || '—');
+        avgCastleEl.innerText = (profile.avg_castle_time ? `${Math.round(profile.avg_castle_time)}s` : (profile.avg_castle || '—'));
+
+        // civ icon
+        const civKey = typeof civ === 'string' ? civ : (civ.name || 'default');
+        civIconEl.innerText = civIcons[civKey] || civIcons['default'];
+
+      } catch (e) {
+        playerNameEl.innerText = 'Erro ao carregar perfil';
+        console.error(e);
+      }
+    }
+
+    // render matches / ticker
+    async function renderMatches() {
+      try {
+        const url = `${API_BASE}/profile/${PROFILE_ID}/matches`;
+        const data = await safeFetch(url);
+        // data might be array or { matches: [...] }
+        const matches = Array.isArray(data) ? data : (data.matches || []);
+        tickerList.innerHTML = '';
+
+        if (!matches || matches.length === 0) {
+          const el = document.createElement('div'); el.className='ticker-item'; el.innerText = 'Nenhuma partida recente disponível';
+          tickerList.appendChild(el);
+          return;
+        }
+
+        // create duplicate list for looping animation
+        const listToShow = matches.slice(0,12).map(m => {
+          const civ = (m.civ || (m.player && m.player.civ) || m.civilization || '—');
+          const res = m.rating_after || m.elo_after || m.rating || m.result || '';
+          const outcome = (m.result === 'win' || m.result === 'Victory' || (m.team && m.team.win)) ? 'V' : (m.result === 'loss' || m.result === 'Defeat' ? 'D' : '');
+          const mm = `${civ} • ${outcome} ${res || ''} `;
+          return mm;
+        });
+
+        // append twice for smooth scroll loop
+        [...listToShow, ...listToShow].forEach(text => {
+          const el = document.createElement('div');
+          el.className = 'ticker-item';
+          el.innerText = text;
+          tickerList.appendChild(el);
+        });
+
+        // dynamic animation length based on content width
+        requestAnimationFrame(()=> {
+          const width = tickerList.scrollWidth / 2; // since duplicated
+          const speed = Math.max(12, Math.min(40, width / 30)); // seconds: heuristic
+          tickerList.style.animationDuration = `${speed}s`;
+        });
+
+      } catch (e) {
+        tickerList.innerHTML = '<div class="ticker-item">Erro ao carregar partidas</div>';
+        console.error(e);
+      }
+    }
+
+    // Optional: try to fetch resource snapshot (eco) — AoE2Recs may NOT provide live resource numbers in profile API.
+    async function renderEco() {
+      // AoE2Recs profile endpoint may not provide live resource snapshot.
+      // Try to read data.profile.current_resources or similar; fallback to hyphen.
+      try {
+        const url = `${API_BASE}/profile/${PROFILE_ID}`;
+        const data = await safeFetch(url);
+        const snap = data.profile && data.profile.current_resources;
+        if (snap) {
+          foodEl.innerText = snap.food ?? '—';
+          woodEl.innerText = snap.wood ?? '—';
+          goldEl.innerText = snap.gold ?? '—';
+          stoneEl.innerText = snap.stone ?? '—';
+        } else {
+          foodEl.innerText = '—';
+          woodEl.innerText = '—';
+          goldEl.innerText = '—';
+          stoneEl.innerText = '—';
+        }
+      } catch (e) {
+        foodEl.innerText = '—'; woodEl.innerText='—'; goldEl.innerText='—'; stoneEl.innerText='—';
+      }
+    }
+
+    // Full refresh
+    async function refreshAll() {
+      await Promise.allSettled([ renderProfile(), renderMatches(), renderEco() ]);
+    }
+
+    // initial + interval
+    refreshAll();
+    setInterval(refreshAll, 15000); // atualiza a cada 15s
+
+    // If you want to enable pointer events (clicks) on overlay, set pointer-events to auto in CSS for .overlay or specific elements.
+  </script>
 </body>
 </html>
